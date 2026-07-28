@@ -15,9 +15,10 @@ ozone column (from the sonde's own `SondeTotalO3` integration).
 
 - Python 3.10+
 - `numpy`, `pandas`, `scipy`, `matplotlib`
-- Input data (WOUDC ozonesonde profiles) and the 13 geophysical proxies
-  are both included in this repo -- see [Input data](#input-data) and
-  [Proxies](#proxies) below.
+- WOUDC ozonesonde profiles, of your own (not bundled in this repo --
+  see [Input data](#input-data) below for how to point the code at them)
+- The 13 geophysical proxies are included in `proxy/` (see
+  [Proxies](#proxies) below)
 
 ## Running the pipeline
 
@@ -35,6 +36,7 @@ validation suite) and writes figures to `../output/`.
 |---|---|---|
 | `--no-proxies` | off | Disable the 13 geophysical proxies (raw trend, level+season+AR(1) model only) |
 | `--no-validation` | off | Skip the 5-level validation suite (faster, figures only) |
+| `--input-dir DIR` | `../input` | Where to read the WOUDC ozonesonde archives from (see [Input data](#input-data)) |
 | `--output-dir DIR` | `../output` | Where to write the figures |
 | `--n-mcmc N` | 15000 | Post-burn-in MCMC iterations |
 | `--n-burnin N` | 3000 | MCMC burn-in iterations |
@@ -68,18 +70,25 @@ is also written to stdout.
 
 ## Input data
 
-The `input/` folder contains the raw WOUDC ozonesonde profiles (extCSV
-format), split into the three archives that make up the Sodankyla record:
+This repo does not bundle the raw WOUDC ozonesonde profiles -- point the
+code at wherever you keep them instead. The pipeline expects three
+subfolders (the archives that make up the Sodankyla record), each holding
+WOUDC extCSV files directly:
 
-| Folder | Coverage | Profiles |
+| Subfolder | Coverage | Profiles |
 |---|---|---|
-| `input/89-94/woudc/` | 1989--1994 | 382 |
-| `input/94-24/woudc/` | 1994--2024 | 1510 |
-| `input/24-26/woudc/` | 2024--2026 | 70 |
+| `<input-dir>/89-94/woudc/` | 1989--1994 | 382 |
+| `<input-dir>/94-24/woudc/` | 1994--2024 | 1510 |
+| `<input-dir>/24-26/woudc/` | 2024--2026 | 70 |
 
-`load_sonde_data()` in `dlm/step6_ozone_dlm.py` reads all three (see
-`SONDE_DIRS`), deduplicating the dates that overlap at the archive
-boundaries.
+Two ways to set `<input-dir>`:
+
+- Command line: `python step6_ozone_dlm.py --input-dir /path/to/your/data`
+- Code default: edit `INPUT_DIR` at the top of `dlm/step6_ozone_dlm.py`
+  (defaults to `../input` relative to the `dlm/` folder)
+
+`load_sonde_data()` reads all three subfolders and deduplicates dates that
+overlap at the archive boundaries.
 
 ## Proxies
 

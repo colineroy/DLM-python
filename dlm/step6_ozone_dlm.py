@@ -62,13 +62,25 @@ STATION   = "Sodankyla"
 LAT, LON  = 67.37, 26.63
 
 HERE      = Path(__file__).parent
-# The 3 WOUDC folders covering the whole Sodankyla archive:
-# 89-94 (NOGDB, 382 profiles), 94-24 (1510 profiles), 24-26 (SHARP, 70 profiles).
-SONDE_DIRS = [
-    HERE.parent / "input" / "89-94" / "woudc",
-    HERE.parent / "input" / "94-24" / "woudc",
-    HERE.parent / "input" / "24-26" / "woudc",
-]
+# WOUDC ozonesonde profiles are NOT bundled in this repo (they are not
+# ours to redistribute in bulk) -- point INPUT_DIR at wherever you keep
+# them, either by editing this default or via `--input-dir` on the
+# command line (see _parse_args() / run_pipeline()). The 3 subfolders
+# below must cover the whole Sodankyla archive: 89-94 (NOGDB, 382
+# profiles), 94-24 (1510 profiles), 24-26 (SHARP, 70 profiles).
+INPUT_DIR = HERE.parent / "input"
+
+
+def _sonde_dirs(input_dir) -> list:
+    input_dir = Path(input_dir)
+    return [
+        input_dir / "89-94" / "woudc",
+        input_dir / "94-24" / "woudc",
+        input_dir / "24-26" / "woudc",
+    ]
+
+
+SONDE_DIRS = _sonde_dirs(INPUT_DIR)
 PROXY_DIR = HERE.parent / "proxy"
 
 OUTPUT_DIR = HERE.parent / "output"
@@ -617,17 +629,18 @@ def print_summary(results: dict):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_pipeline(run_validation: bool = True, use_proxies: bool = USE_PROXIES,
-                 output_dir: Path = OUTPUT_DIR):
+                 output_dir: Path = OUTPUT_DIR, input_dir: Path = INPUT_DIR):
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
+    sonde_dirs = _sonde_dirs(input_dir)
     print("="*60)
     print(f"  DLM OZONE - {STATION} {LAT}N {LON}E")
     print(f"  WOUDC sondes 1988-2026 (3 partial layers + total column)")
-    print(f"  Proxies: {'yes' if use_proxies else 'no'} | Output: {output_dir}")
+    print(f"  Proxies: {'yes' if use_proxies else 'no'} | Input: {input_dir} | Output: {output_dir}")
     print("="*60)
 
     print("\n[1] Loading WOUDC sondes...")
-    df_sonde_daily = load_sonde_data()
+    df_sonde_daily = load_sonde_data(sonde_dirs)
     monthly_sonde = sonde_to_monthly(df_sonde_daily)
 
     proxy_df = (load_proxies(monthly_sonde.index, tp_sonde=monthly_sonde["tropopause_km"])
@@ -670,6 +683,10 @@ def _parse_args():
     p.add_argument("--no-validation", action="store_true",
                    help="Disable the 5 validation levels (faster, "
                        "produces only the trend figures).")
+    p.add_argument("--input-dir", type=str, default=None,
+                   help="Folder holding the WOUDC ozonesonde archives, "
+                       "expected as <input-dir>/{89-94,94-24,24-26}/woudc/ "
+                       f"(default: {INPUT_DIR}).")
     p.add_argument("--output-dir", type=str, default=None,
                    help=f"Output directory for the figures (default: {OUTPUT_DIR}).")
     p.add_argument("--n-mcmc", type=int, default=N_MCMC,
@@ -694,5 +711,6 @@ if __name__ == "__main__":
     run_pipeline(
         run_validation=not args.no_validation,
         use_proxies=not args.no_proxies,
+        input_dir=Path(args.input_dir) if args.input_dir else INPUT_DIR,
         output_dir=Path(args.output_dir) if args.output_dir else OUTPUT_DIR,
     )
