@@ -1,6 +1,6 @@
 """
 =============================================================================
-STEP 2 / 6  —  Kalman filter (forward pass)
+STEP 2 / 6  --  Kalman filter (forward pass)
 =============================================================================
 
 Reference paper:
@@ -12,7 +12,7 @@ Code shared with the CH4 pipeline (DLM/dlmpython_ch4/step2_kalman_filter.py):
 
 ──────────────────────────────────────────────────────────────────────────────
 
-KALMAN FILTER — PRINCIPLE
+KALMAN FILTER -- PRINCIPLE
 ─────────────────────────
 
 The Kalman filter solves the problem:
@@ -32,7 +32,7 @@ It alternates two steps at each time step:
     │                                                              │
     │  v(t) = y(t) - F.x_hat(t|t-1) - sum_n beta_n*X_n(t) (Eq. A6) │
     │  S(t) = F.P(t|t-1).F^T + R                          (Eq. A7) │
-    │  K(t) = P(t|t-1).F^T . S(t)^-1              (Eq. A8 — gain)  │
+    │  K(t) = P(t|t-1).F^T . S(t)^-1              (Eq. A8 -- gain)  │
     │                                                              │
     │  x_hat(t|t) = x_hat(t|t-1) + K(t).v(t)                       │
     │  P(t|t)  = (I - K(t).F) . P(t|t-1)                            │
@@ -42,7 +42,7 @@ It alternates two steps at each time step:
     P(t|t)     : estimation-error covariance matrix
     v(t)       : innovation (prediction error of y)
     S(t)       : innovation variance
-    K(t)       : Kalman gain — weighs the innovation vs. the prediction
+    K(t)       : Kalman gain -- weighs the innovation vs. the prediction
 
 MAIN OUTPUT:
     log-likelihood  L = -1/2 sum [ log|S(t)| + v(t)^2/S(t) ]
@@ -58,7 +58,7 @@ from step1_ssm_matrices import make_G, make_F, make_Q, make_R, N_STATE, RHO
 def kalman_filter(
     y:          np.ndarray,       # (n,)   observations (relative ozone anomaly)
     sigma_obs:  float,            # sigma_obs  (observation noise)
-    sigma_trend: float,           # sigma_trend (slope noise — key parameter)
+    sigma_trend: float,           # sigma_trend (slope noise -- key parameter)
     sigma_seas:  float,           # sigma_seas  (seasonal noise)
     sigma_ar:   float = 0.0,     # sigma_ar   (AR(1) noise)
     proxies:    np.ndarray | None = None,  # (n, p) geophysical proxies
@@ -158,7 +158,7 @@ def kalman_filter(
             v_all[t] = v
             S_all[t] = S
 
-            # Log-likelihood (implicit Eq. — Kalman filter = MLE)
+            # Log-likelihood (implicit Eq. -- Kalman filter = MLE)
             # L += -1/2 [log(2*pi) + log(S) + v^2/S]
             loglik += -0.5 * (np.log(2*np.pi) + np.log(S) + v**2 / S)
 

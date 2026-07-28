@@ -1,6 +1,6 @@
 """
 =============================================================================
-STEP 6 / 6  —  Full ozone DLM pipeline, Sodankyla
+STEP 6 / 6  --  Full ozone DLM pipeline, Sodankyla
 =============================================================================
 
 Layers (4, analogous to the CH4 approach: 3 partial layers + 1 "total
@@ -20,8 +20,8 @@ Sondes capped at 26 km (SONDE_CAP_KM) for the partial layers: above
 that, ECC balloons become unreliable (burst ~30-35 km, measurement
 increasingly imprecise at decreasing pressure).
 
-Proxies (13, see stat/DLM/README.md, already downloaded into
-stat/data/proxies/), EXCEPT TP which is recomputed by us:
+Proxies (13, see ../proxy/, already downloaded), EXCEPT TP which is
+recomputed by us:
     Solar (Mg II), QBO30, QBO10, ENSO (MEI), AO, EHF, SAOD,
     T_LS, T_MS, EESC, VPSC, VPSC_EESC
     TP: WMO thermal tropopause height, computed directly on each sonde
@@ -72,7 +72,7 @@ SONDE_DIRS = [
     PROJ_ROOT / "ground" / "sondes" / "sondes_data" / "94-24" / "woudc",
     PROJ_ROOT / "ground" / "sondes" / "sondes_data" / "24-26" / "woudc",
 ]
-PROXY_DIR = PROJ_ROOT / "stat" / "data" / "proxies"
+PROXY_DIR = HERE.parent / "proxy"
 
 OUTPUT_DIR = HERE.parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -249,7 +249,7 @@ def sonde_to_monthly(df_sonde: pd.DataFrame) -> pd.DataFrame:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 3. PROXIES (13 series, already downloaded into stat/data/proxies/, except TP)
+# 3. PROXIES (13 series, already downloaded into proxy/, except TP)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _load_csv_series(fname, col_idx, monthly_idx):
@@ -291,7 +291,7 @@ def _load_vpsc(monthly_idx):
 
 def load_proxies(monthly_idx: pd.DatetimeIndex,
                  tp_sonde: pd.Series | None = None) -> pd.DataFrame:
-    """Loads the 13 proxies (stat/data/proxies/, except TP), interpolates
+    """Loads the 13 proxies (proxy/, except TP), interpolates
     short gaps, standardizes (mean=0, std=1).
 
     tp_sonde : monthly tropopause height computed on the sondes

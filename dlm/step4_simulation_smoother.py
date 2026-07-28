@@ -1,6 +1,6 @@
 """
 =============================================================================
-STEP 4 / 6  —  Simulation Smoother (Carter-Kohn, 1994)
+STEP 4 / 6  --  Simulation Smoother (Carter-Kohn, 1994)
 =============================================================================
 
 Reference paper:
@@ -30,7 +30,7 @@ implicitly assumes the uncertainties are Gaussian and symmetric around
 that mean.
 
 BUT step 5 (MCMC) needs the log-likelihood marginalized over the
-states — and that requires drawing whole sampled trajectories, not
+states -- and that requires drawing whole sampled trajectories, not
 just the mean.
 
 The Carter-Kohn algorithm draws complete trajectories
@@ -67,7 +67,7 @@ def simulation_smoother(
     rng:           np.random.Generator | None = None,
 ) -> dict:
     """
-    Simulation smoother (Carter-Kohn 1994) — draws M state trajectories.
+    Simulation smoother (Carter-Kohn 1994) -- draws M state trajectories.
 
     Parameters
     ----------
@@ -122,10 +122,10 @@ def simulation_smoother(
     print(f"  [OK] {n_samples} trajectories generated")
 
     return {
-        "samples":       samples,        # (M, n, N_STATE) — complete trajectories
-        "level_samp":    level_samp,     # (M, n)    — levels mu*(t)
-        "slope_samp":    slope_samp,     # (M, n)    — slopes  nu*(t) [%/dec]
-        "harmonic_samp": harmonic_samp,  # (M, n, 2*N_HARM) — gamma_c1..gamma_s_N
+        "samples":       samples,        # (M, n, N_STATE) -- complete trajectories
+        "level_samp":    level_samp,     # (M, n)    -- levels mu*(t)
+        "slope_samp":    slope_samp,     # (M, n)    -- slopes  nu*(t) [%/dec]
+        "harmonic_samp": harmonic_samp,  # (M, n, 2*N_HARM) -- gamma_c1..gamma_s_N
     }
 
 

@@ -1,6 +1,6 @@
 """
 =============================================================================
-STEP 5 / 6  —  MCMC (Adaptive Metropolis-Hastings)
+STEP 5 / 6  --  MCMC (Adaptive Metropolis-Hastings)
 =============================================================================
 
 Reference paper:
@@ -197,7 +197,7 @@ def run_mcmc(
     current_lp = log_posterior(theta, y, prior, proxies, beta)
 
     if not np.isfinite(current_lp):
-        raise ValueError("Log-posterior not finite at start — check the data.")
+        raise ValueError("Log-posterior not finite at start -- check the data.")
 
     # ── Initial proposal covariance ────────────────────────────────
     d = len(PARAM_NAMES)

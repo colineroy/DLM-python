@@ -1,6 +1,6 @@
 """
 =============================================================================
-STEP 3 / 6  —  RTS smoother (Rauch-Tung-Striebel)
+STEP 3 / 6  --  RTS smoother (Rauch-Tung-Striebel)
 =============================================================================
 
 Reference paper:
@@ -67,7 +67,7 @@ from step1_ssm_matrices import make_G, N_STATE, RHO
 
 def kalman_smoother(kf_result: dict, rho: float = RHO) -> dict:
     """
-    RTS smoother (Rauch-Tung-Striebel) — backward pass.
+    RTS smoother (Rauch-Tung-Striebel) -- backward pass.
 
     Takes as input the Kalman filter result (step 2) and produces the
     smoothed states over the whole series.
@@ -75,7 +75,7 @@ def kalman_smoother(kf_result: dict, rho: float = RHO) -> dict:
     Parameters
     ----------
     kf_result : dict
-        Output of kalman_filter() — must contain:
+        Output of kalman_filter() -- must contain:
             x_filt  (n, N_STATE)          : filtered states x_hat(t|t)
             P_filt  (n, N_STATE, N_STATE) : filtered covariances P(t|t)
             x_pred  (n, N_STATE)          : predicted states x_hat(t+1|t)
@@ -86,7 +86,7 @@ def kalman_smoother(kf_result: dict, rho: float = RHO) -> dict:
     dict with:
         x_smooth  (n, N_STATE)        : smoothed states x_hat_s(t)
         P_smooth  (n, N_STATE, N_STATE) : smoothed covariances P_s(t)
-        L_gains   (n, N_STATE, N_STATE) : smoother gains L(t) — used by the sim. smoother
+        L_gains   (n, N_STATE, N_STATE) : smoother gains L(t) -- used by the sim. smoother
         level     (n,)       : level mu_s(t)          = x_smooth[:, 0]
         slope     (n,)       : slope nu_s(t) [/month]  = x_smooth[:, 1]
         slope_std (n,)       : slope std dev           = sqrt(P_smooth[:, 1, 1])
@@ -152,9 +152,9 @@ def kalman_smoother(kf_result: dict, rho: float = RHO) -> dict:
     ic_upper = slope_dec + 1.96 * std_dec
 
     return {
-        "x_smooth":  x_smooth,    # (n, N_STATE)  — all smoothed states
-        "P_smooth":  P_smooth,    # (n, N_STATE, N_STATE) — smoothed covariances
-        "L_gains":   L_gains,     # (n, N_STATE, N_STATE) — gains (step 4)
+        "x_smooth":  x_smooth,    # (n, N_STATE)  -- all smoothed states
+        "P_smooth":  P_smooth,    # (n, N_STATE, N_STATE) -- smoothed covariances
+        "L_gains":   L_gains,     # (n, N_STATE, N_STATE) -- gains (step 4)
         "level":     level,       # (n,)  mu_s(t)
         "slope":     slope,       # (n,)  nu_s(t) [unit/month]
         "slope_std": slope_std,   # (n,)  std(nu_s(t))
@@ -164,7 +164,7 @@ def kalman_smoother(kf_result: dict, rho: float = RHO) -> dict:
     }
 
 
-# ─── ROLLING TRENDS — Nilsen et al. (2024) ──────────────────────────────
+# ─── ROLLING TRENDS -- Nilsen et al. (2024) ──────────────────────────────
 
 def rolling_trend_from_level(smooth_result: dict,
                              window_yr: int = 20) -> dict:

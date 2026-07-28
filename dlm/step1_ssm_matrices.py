@@ -1,6 +1,6 @@
 """
 =============================================================================
-STEP 1 / 6  —  State-space model matrices
+STEP 1 / 6  --  State-space model matrices
 =============================================================================
 
 Reference paper:
@@ -183,7 +183,7 @@ def describe_model(sigma_trend=0.001, sigma_seas=0.01,
     R = make_R(sigma_obs)
 
     print("="*60)
-    print("  STATE-SPACE MODEL — Laine (2014) + AR(1), ozone")
+    print("  STATE-SPACE MODEL -- Laine (2014) + AR(1), ozone")
     print("="*60)
 
     print(f"\n  N_HARM = {N_HARM}, N_STATE = {N_STATE}")

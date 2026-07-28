@@ -1,6 +1,6 @@
 """
 =============================================================================
-DLM model verification — 5 diagnostic levels
+DLM model verification -- 5 diagnostic levels
 =============================================================================
 
 Ozone version, ported from DLM/dlmpython_ch4/verif_modele.py with the
@@ -151,7 +151,7 @@ def _geyer_ess(chains_list: list) -> float:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LEVEL 1 — INNOVATION DIAGNOSTICS
+# LEVEL 1 -- INNOVATION DIAGNOSTICS
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def check_innovations(kf_result: dict,
@@ -177,13 +177,13 @@ def check_innovations(kf_result: dict,
     n = len(v)
 
     print(f"\n{'='*60}")
-    print(f" LEVEL 1 — INNOVATION DIAGNOSTICS: {title}")
+    print(f" LEVEL 1 -- INNOVATION DIAGNOSTICS: {title}")
     print(f"{'='*60}")
 
     # ── Test 1: zero mean ─────────────────────────────────────────────
     t_stat, p_mean = stats.ttest_1samp(v_std, 0)
     ok_mean = p_mean > 0.05
-    print(f"\n Test 1 — Zero mean (t-test):")
+    print(f"\n Test 1 -- Zero mean (t-test):")
     print(f" Mean = {v_std.mean():.4f} (should be ~ 0)")
     print(f" p = {p_mean:.4f} -> {'OK' if ok_mean else 'PROBLEM'}")
 
@@ -191,7 +191,7 @@ def check_innovations(kf_result: dict,
     sample = v_std[:min(n, 500)]
     _, p_norm = shapiro(sample)
     ok_norm = p_norm > 0.05
-    print(f"\n Test 2 — Normality (Shapiro-Wilk):")
+    print(f"\n Test 2 -- Normality (Shapiro-Wilk):")
     print(f" p = {p_norm:.4f} -> {'OK' if ok_norm else 'WARNING'}")
 
     # ── Test 3: autocorrelation (Ljung-Box, lags 1 and 12, Bonferroni) ────
@@ -200,7 +200,7 @@ def check_innovations(kf_result: dict,
     lb = acorr_ljungbox(v_std, lags=[1, 12], return_df=True)
     p_lb = lb["lb_pvalue"].values
     ok_lb = np.all(p_lb > alpha_corr)
-    print(f"\n Test 3 — Autocorrelation (Ljung-Box, Bonferroni threshold {alpha_corr:.3f}):")
+    print(f"\n Test 3 -- Autocorrelation (Ljung-Box, Bonferroni threshold {alpha_corr:.3f}):")
     for lag, p in zip([1, 12], p_lb):
         flag = "OK" if p > alpha_corr else "AUTOCORRELATION"
         print(f" lag={lag:2d} p={p:.4f} -> {flag}")
@@ -214,11 +214,11 @@ def check_innovations(kf_result: dict,
         if len(groups) >= 2:
             _, p_het = stats.levene(*groups, center="median")
             ok_het = p_het > 0.05
-            print(f"\n Test 4 — Seasonal homoscedasticity (Levene, {len(groups)} months):")
+            print(f"\n Test 4 -- Seasonal homoscedasticity (Levene, {len(groups)} months):")
             print(f" p = {p_het:.4f} -> {'OK' if ok_het else 'HETEROSCEDASTICITY'}")
         else:
             ok_het, p_het = True, np.nan
-            print(f"\n Test 4 — Homoscedasticity: not enough distinct months, skipped")
+            print(f"\n Test 4 -- Homoscedasticity: not enough distinct months, skipped")
     else:
         mid = len(v_std) // 2
         var1 = np.var(v_std[:mid])
@@ -226,7 +226,7 @@ def check_innovations(kf_result: dict,
         ratio = max(var1, var2) / min(var1, var2)
         ok_het = ratio < 2.0
         p_het = np.nan
-        print(f"\n Test 4 — Homoscedasticity (fallback, no dates):")
+        print(f"\n Test 4 -- Homoscedasticity (fallback, no dates):")
         print(f" 1st/2nd-half ratio = {ratio:.2f} -> {'OK' if ok_het else 'HETEROSCEDASTICITY'}")
 
     # ── Summary ─────────────────────────────────────────────────────────────
@@ -251,7 +251,7 @@ def check_innovations(kf_result: dict,
                 label="+/-2 sigma (95% expected)")
     pct_out = 100 * np.mean(np.abs(v_std) > 2)
     ax1.set_title(
-        f"Standardized innovations v(t)/sqrt(S(t)) — {pct_out:.1f}% > 2 sigma "
+        f"Standardized innovations v(t)/sqrt(S(t)) -- {pct_out:.1f}% > 2 sigma "
         f"(expected 5%)",
         fontsize=11, color=C["text"])
     ax1.set_ylabel("v/sqrt(S)", fontsize=10)
@@ -287,7 +287,7 @@ def check_innovations(kf_result: dict,
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LEVEL 2 — MCMC CONVERGENCE (multi-chain audit)
+# LEVEL 2 -- MCMC CONVERGENCE (multi-chain audit)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def check_mcmc_convergence(
@@ -308,7 +308,7 @@ def check_mcmc_convergence(
         prior = make_prior(y)
 
     print(f"\n{'='*60}")
-    print(f" LEVEL 2 — MCMC CONVERGENCE ({n_chains} chains, audit)")
+    print(f" LEVEL 2 -- MCMC CONVERGENCE ({n_chains} chains, audit)")
     print(f"{'='*60}")
 
     mc = run_mcmc_multichain(y, prior, n_chains=n_chains, n_iter=n_iter,
@@ -338,7 +338,7 @@ def check_mcmc_convergence(
         for c in range(n_chains):
             ax.plot(per_chain[c], lw=0.5,
                     color=chain_colors[c % len(chain_colors)], alpha=0.7)
-        ax.set_title(f"Trace ({n_chains} chains) — {name}", fontsize=9, color=C["text"])
+        ax.set_title(f"Trace ({n_chains} chains) -- {name}", fontsize=9, color=C["text"])
         ax.set_xlabel("Iteration", fontsize=8)
         ax.grid(color=C["grid"], lw=0.4)
 
@@ -349,7 +349,7 @@ def check_mcmc_convergence(
         ax.bar(lags, acf_mean, color=C["blue"], alpha=0.6, width=0.8)
         ax.axhline(1.96/np.sqrt(n), color=C["amber"], ls="--", lw=1)
         ax.axhline(-1.96/np.sqrt(n), color=C["amber"], ls="--", lw=1)
-        ax.set_title(f"Autocorrelation — {name}", fontsize=9, color=C["text"])
+        ax.set_title(f"Autocorrelation -- {name}", fontsize=9, color=C["text"])
         ax.set_xlabel("Lag", fontsize=8)
         ax.grid(color=C["grid"], lw=0.4)
 
@@ -360,7 +360,7 @@ def check_mcmc_convergence(
         ax.axvline(med, color=C["red"], lw=1.5, label=f"Median={med:.5f}")
         ax.axvspan(lo, hi, alpha=0.15, color=C["red"],
                    label=f"CI95=[{lo:.5f},{hi:.5f}]")
-        ax.set_title(f"Posterior — {name}", fontsize=9, color=C["text"])
+        ax.set_title(f"Posterior -- {name}", fontsize=9, color=C["text"])
         ax.legend(fontsize=7, framealpha=0.3)
         ax.grid(color=C["grid"], lw=0.4)
 
@@ -388,7 +388,7 @@ def check_mcmc_convergence(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LEVEL 3 — SYNTHETIC-DATA TEST (the most fundamental)
+# LEVEL 3 -- SYNTHETIC-DATA TEST (the most fundamental)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def test_synthetic_recovery(
@@ -410,7 +410,7 @@ def test_synthetic_recovery(
     """
     np.random.seed(seed)
     print(f"\n{'='*60}")
-    print(f" LEVEL 3 — SYNTHETIC-DATA TEST")
+    print(f" LEVEL 3 -- SYNTHETIC-DATA TEST")
     print(f"{'='*60}")
     print(f"\n Injected parameters:")
     print(f" sigma_trend = {true_sigma_trend:.5f}")
@@ -522,7 +522,7 @@ def test_synthetic_recovery(
 
     fig, axes = plt.subplots(2, 1, figsize=(14, 9), sharex=True)
     _setup_dark(fig)
-    fig.suptitle("Level 3 — Recovery on synthetic data",
+    fig.suptitle("Level 3 -- Recovery on synthetic data",
                  fontsize=12, color=C["text"])
 
     ax1 = axes[0]
@@ -561,7 +561,7 @@ def test_synthetic_recovery(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LEVEL 4 — LEAVE-ONE-YEAR-OUT
+# LEVEL 4 -- LEAVE-ONE-YEAR-OUT
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def leave_one_year_out(
@@ -583,7 +583,7 @@ def leave_one_year_out(
     test_years = sorted(years[step::step][:n_years_test])
 
     print(f"\n{'='*60}")
-    print(f" LEVEL 4 — LEAVE-ONE-YEAR-OUT ({n_years_test} years)")
+    print(f" LEVEL 4 -- LEAVE-ONE-YEAR-OUT ({n_years_test} years)")
     print(f"{'='*60}")
     print(f" Test years: {list(test_years)}")
 
@@ -623,14 +623,14 @@ def leave_one_year_out(
 
     total_coverage = np.mean(all_coverage)
     print(f"\n Overall coverage: {total_coverage:.1%} "
-          f"(expected ~ 95% — "
+          f"(expected ~ 95% -- "
           f"{'OK' if 0.80 <= total_coverage <= 1.0 else 'WARNING'})")
 
     return {"results": results, "total_coverage": total_coverage}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LEVEL 5 — DLM vs MLR COMPARISON
+# LEVEL 5 -- DLM vs MLR COMPARISON
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def compare_dlm_mlr(
@@ -652,7 +652,7 @@ def compare_dlm_mlr(
     """
     n = len(y)
     print(f"\n{'='*60}")
-    print(f" LEVEL 5 — DLM vs MLR COMPARISON")
+    print(f" LEVEL 5 -- DLM vs MLR COMPARISON")
     print(f"{'='*60}")
 
     valid = ~np.isnan(y)
@@ -731,7 +731,7 @@ def compare_dlm_mlr(
 
     print(f"\n {'Metric':<24} {'MLR':>10} {'DLM':>10}")
     print(f" {'-'*46}")
-    print(f" {'Naive AIC (k=5)':<24} {'—':>10} {aic_dlm_naive:>10.1f}")
+    print(f" {'Naive AIC (k=5)':<24} {'n/a':>10} {aic_dlm_naive:>10.1f}")
     if dic_dlm is not None:
         print(f" {'DIC (p_D={:.1f})'.format(p_d):<24} {aic_mlr:>10.1f} {dic_dlm:>10.1f} "
               f"{'  DLM better' if dic_dlm < aic_mlr else '  MLR better'}")
@@ -758,7 +758,7 @@ def compare_dlm_mlr(
 
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
     _setup_dark(fig)
-    fig.suptitle("Level 5 — DLM vs MLR", fontsize=12, color=C["text"])
+    fig.suptitle("Level 5 -- DLM vs MLR", fontsize=12, color=C["text"])
 
     axes[0].plot(np.arange(valid.sum()), resid_mlr,
                  lw=0.7, color=C["amber"], alpha=0.7, label="MLR residuals")
@@ -792,7 +792,7 @@ def compare_dlm_mlr(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# FULL VERIFICATION — RUN EVERYTHING
+# FULL VERIFICATION -- RUN EVERYTHING
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_full_validation(

@@ -1,4 +1,4 @@
-# Ozone DLM Pipeline — Sodankylä
+# Ozone DLM Pipeline -- Sodankylä
 
 A Dynamic Linear Model (Kalman filter + RTS smoother + MCMC, following
 [Laine et al. 2014](https://doi.org/10.5194/acp-14-9707-2014)) estimating
@@ -15,9 +15,10 @@ ozone column (from the sonde's own `SondeTotalO3` integration).
 
 - Python 3.10+
 - `numpy`, `pandas`, `scipy`, `matplotlib`
-- Input data (not included in this folder, resolved via relative paths):
-  - `ground/sondes/sondes_data/{89-94,94-24,24-26}/woudc/` — WOUDC ozonesonde profiles
-  - `stat/data/proxies/` — pre-downloaded geophysical proxy time series
+- Input data: WOUDC ozonesonde profiles (not included in this repo --
+  see `SONDE_DIRS` in `dlm/step6_ozone_dlm.py` for the expected path)
+- The 13 geophysical proxies are included in `proxy/` (see the
+  [Proxies](#proxies) section below)
 
 ## Running the pipeline
 
@@ -41,7 +42,7 @@ validation suite) and writes figures to `../output/`.
 | `--n-sim N` | 200 | Simulated trajectories used for the 95% confidence band |
 | `--aic-threshold X` | 2.0 | AIC gain threshold to keep a proxy in the stepwise selection |
 
-Example — quick run without proxies or validation, in its own folder:
+Example -- quick run without proxies or validation, in its own folder:
 ```bash
 python step6_ozone_dlm.py --no-proxies --no-validation --output-dir ../output/no_proxy
 ```
@@ -50,14 +51,14 @@ python step6_ozone_dlm.py --no-proxies --no-validation --output-dir ../output/no
 
 For each of the 4 layers, two figures:
 
-- `dlm_o3_{layer}.png` — monthly sonde data (points) with the smoothed DLM
+- `dlm_o3_{layer}.png` -- monthly sonde data (points) with the smoothed DLM
   fit (level + seasonal harmonics).
-- `dlm_o3_{layer}_slope.png` — the instantaneous trend $\nu(t)$ in %/decade
+- `dlm_o3_{layer}_slope.png` -- the instantaneous trend $\nu(t)$ in %/decade
   over time, with its 95% MCMC confidence band.
 
 Plus one summary figure comparing all 4 layers:
 
-- `dlm_o3_comparison_layers.png` — trend ± 95% CI per layer, colored by
+- `dlm_o3_comparison_layers.png` -- trend ± 95% CI per layer, colored by
   significance.
 
 A printed summary table (trend, CI, p-value, selected proxies per layer)
@@ -67,6 +68,23 @@ is also written to stdout.
 |---|---|
 
 ![4-layer comparison](output/dlm_o3_comparison_layers.png)
+
+## Proxies
+
+The `proxy/` folder contains the 13 geophysical proxy time series used by
+the model (solar cycle, QBO, ENSO, AO, EHF, SAOD, stratospheric
+temperatures, EESC, VPSC, tropopause height...). They are loaded and
+standardized by `load_proxies()` in `dlm/step6_ozone_dlm.py`.
+
+**Adding a new proxy is not automatic.** Dropping a new file into `proxy/`
+has no effect by itself -- each proxy is loaded by an explicit line inside
+`load_proxies()` (e.g. `df["Solar"] = _load_csv_series("mgii.csv", 0,
+monthly_idx)`). To add a proxy, two edits are needed in
+`dlm/step6_ozone_dlm.py`:
+
+1. Add a loading line for it inside `load_proxies()`.
+2. Add its column name to the `PROXY_CANDIDATES` list, so the stepwise AIC
+   selection (`select_proxies()`) actually considers it.
 
 ## Pipeline structure
 
