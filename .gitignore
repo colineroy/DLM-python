@@ -1,0 +1,13 @@
+# Not part of this repo's scope (kept in the local working copy for reference only)
+ccgcrv/
+*.tex
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.pdf
+__pycache__/
+*.pyc
+dlm/outputPlanD/
