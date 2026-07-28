@@ -62,15 +62,12 @@ STATION   = "Sodankyla"
 LAT, LON  = 67.37, 26.63
 
 HERE      = Path(__file__).parent
-PROJ_ROOT = HERE.parent.parent            # C:\Users\royc\OneDrive\NDACC
 # The 3 WOUDC folders covering the whole Sodankyla archive:
 # 89-94 (NOGDB, 382 profiles), 94-24 (1510 profiles), 24-26 (SHARP, 70 profiles).
-# stat/data/sondes/woudc/ is only a copy of 94-24 -- we read directly from
-# ground/sondes/, which has all 3 periods.
 SONDE_DIRS = [
-    PROJ_ROOT / "ground" / "sondes" / "sondes_data" / "89-94" / "woudc",
-    PROJ_ROOT / "ground" / "sondes" / "sondes_data" / "94-24" / "woudc",
-    PROJ_ROOT / "ground" / "sondes" / "sondes_data" / "24-26" / "woudc",
+    HERE.parent / "input" / "89-94" / "woudc",
+    HERE.parent / "input" / "94-24" / "woudc",
+    HERE.parent / "input" / "24-26" / "woudc",
 ]
 PROXY_DIR = HERE.parent / "proxy"
 

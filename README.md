@@ -15,10 +15,9 @@ ozone column (from the sonde's own `SondeTotalO3` integration).
 
 - Python 3.10+
 - `numpy`, `pandas`, `scipy`, `matplotlib`
-- Input data: WOUDC ozonesonde profiles (not included in this repo --
-  see `SONDE_DIRS` in `dlm/step6_ozone_dlm.py` for the expected path)
-- The 13 geophysical proxies are included in `proxy/` (see the
-  [Proxies](#proxies) section below)
+- Input data (WOUDC ozonesonde profiles) and the 13 geophysical proxies
+  are both included in this repo -- see [Input data](#input-data) and
+  [Proxies](#proxies) below.
 
 ## Running the pipeline
 
@@ -59,7 +58,7 @@ For each of the 4 layers, two figures:
 Plus one summary figure comparing all 4 layers:
 
 - `dlm_o3_comparison_layers.png` -- trend ± 95% CI per layer, colored by
-  significance.
+  significance (produced locally, not tracked in this repo).
 
 A printed summary table (trend, CI, p-value, selected proxies per layer)
 is also written to stdout.
@@ -67,7 +66,20 @@ is also written to stdout.
 | ![Lower stratosphere fit](output/dlm_o3_lower_strato.png) | ![Lower stratosphere slope](output/dlm_o3_lower_strato_slope.png) |
 |---|---|
 
-![4-layer comparison](output/dlm_o3_comparison_layers.png)
+## Input data
+
+The `input/` folder contains the raw WOUDC ozonesonde profiles (extCSV
+format), split into the three archives that make up the Sodankyla record:
+
+| Folder | Coverage | Profiles |
+|---|---|---|
+| `input/89-94/woudc/` | 1989--1994 | 382 |
+| `input/94-24/woudc/` | 1994--2024 | 1510 |
+| `input/24-26/woudc/` | 2024--2026 | 70 |
+
+`load_sonde_data()` in `dlm/step6_ozone_dlm.py` reads all three (see
+`SONDE_DIRS`), deduplicating the dates that overlap at the archive
+boundaries.
 
 ## Proxies
 

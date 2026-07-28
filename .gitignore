@@ -11,3 +11,4 @@ ccgcrv/
 __pycache__/
 *.pyc
 dlm/outputPlanD/
+output/dlm_o3_comparison_layers.png
