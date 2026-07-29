@@ -71,15 +71,23 @@ is also written to stdout.
 ## Input data
 
 This repo does not bundle the raw WOUDC ozonesonde profiles -- point the
-code at wherever you keep them instead. The pipeline expects three
-subfolders (the archives that make up the Sodankyla record), each holding
-WOUDC extCSV files directly:
+code at wherever you keep them instead. `_sonde_dirs()` in
+`dlm/step6_ozone_dlm.py` auto-detects which of two layouts `<input-dir>`
+uses:
 
-| Subfolder | Coverage | Profiles |
-|---|---|---|
-| `<input-dir>/89-94/woudc/` | 1989--1994 | 382 |
-| `<input-dir>/94-24/woudc/` | 1994--2024 | 1510 |
-| `<input-dir>/24-26/woudc/` | 2024--2026 | 70 |
+- **Sodankyla archive layout** -- three chronological subfolders, used
+  automatically whenever any of them exists:
+
+  | Subfolder | Coverage | Profiles |
+  |---|---|---|
+  | `<input-dir>/89-94/woudc/` | 1989--1994 | 382 |
+  | `<input-dir>/94-24/woudc/` | 1994--2024 | 1510 |
+  | `<input-dir>/24-26/woudc/` | 2024--2026 | 70 |
+
+- **Flat layout** -- used otherwise: any WOUDC extCSV files directly
+  inside `<input-dir>/`, no reorganizing needed. This is what a plain
+  download for another station looks like (see
+  [Using a different station](#using-a-different-station)).
 
 Two ways to set `<input-dir>`:
 
@@ -87,8 +95,8 @@ Two ways to set `<input-dir>`:
 - Code default: edit `INPUT_DIR` at the top of `dlm/step6_ozone_dlm.py`
   (defaults to `../input` relative to the `dlm/` folder)
 
-`load_sonde_data()` reads all three subfolders and deduplicates dates that
-overlap at the archive boundaries.
+`load_sonde_data()` reads every resolved subfolder and deduplicates dates
+that overlap at the archive boundaries.
 
 ## Proxies
 
@@ -106,6 +114,98 @@ monthly_idx)`). To add a proxy, two edits are needed in
 1. Add a loading line for it inside `load_proxies()`.
 2. Add its column name to the `PROXY_CANDIDATES` list, so the stepwise AIC
    selection (`select_proxies()`) actually considers it.
+
+## Using a different station
+
+The pipeline is not tied to Sodankyla. Any WOUDC ozonesonde station can
+be used with minimal changes.
+
+### Step 1 -- Point the code at your data
+
+WOUDC ozonesonde profiles for any station can be downloaded from
+[woudc.org/data/explore.php](https://woudc.org/data/explore.php) ->
+*Data -> Ozonesonde*. Filter by station, download the extCSV files into
+a single folder, and pass it to the pipeline:
+
+```bash
+python step6_ozone_dlm.py --input-dir /path/to/kiruna/sondes
+```
+
+No reorganizing is needed: `_sonde_dirs()` only uses the three
+chronological subfolders (`89-94/woudc/`, `94-24/woudc/`, `24-26/woudc/`)
+for the Sodankyla archive specifically; for any other folder it reads
+the extCSV files directly inside it (see [Input data](#input-data)).
+`load_sonde_data()` then deduplicates by date as usual.
+
+### Step 2 -- Update the station metadata (optional but recommended)
+
+At the top of `dlm/step6_ozone_dlm.py`, three constants control the
+station identity used in console output, figure titles, and output
+filenames:
+
+```python
+STATION_NAME = "Sodankyla"   # appears in printed banners and figure titles
+STATION_CODE = ""            # short tag prefixed to output filenames
+LAT, LON     = 67.37, 26.63  # currently cosmetic (printed banner only)
+```
+
+Change these for your station, e.g. for Kiruna:
+
+```python
+STATION_NAME = "Kiruna"
+STATION_CODE = "ki"
+LAT, LON     = 67.84, 20.41
+```
+
+Figure titles and the printed summary table pick up `STATION_NAME`
+automatically. `STATION_CODE`, if set, prefixes every output filename
+(`dlm_o3_ki_troposphere.png`, `dlm_o3_ki_comparison_layers.png`, ...) so
+that runs for different stations can share the same `--output-dir`
+without overwriting each other. Left empty (the Sodankyla default),
+filenames are unprefixed, exactly as documented in
+[What you get](#what-you-get).
+
+`LAT, LON` are not currently used in any computation -- they only appear
+in the printed run banner. Update them anyway so the banner stays
+accurate.
+
+### Step 3 -- The tropopause proxy (TP) needs no change
+
+The tropopause height proxy is computed directly from the sonde profiles
+by `_tropopause_km()` -- this is **fully automatic**. Each profile's own
+temperature/pressure/altitude record is used, so the proxy adapts to the
+local tropopause climatology of the new station with no code change.
+
+### Step 4 -- Keep outputs separate
+
+Either rely on `STATION_CODE` (Step 2) or use a station-specific
+`--output-dir`, or both:
+
+```bash
+python step6_ozone_dlm.py \
+  --input-dir /path/to/kiruna/sondes \
+  --output-dir ../output/kiruna
+```
+
+### Notes
+
+**Proxies.** The 13 geophysical proxies in `proxy/` are regional or
+global (solar cycle, QBO, ENSO, AO, EHF, SAOD, EESC, VPSC...) and apply
+to any Arctic or sub-Arctic station without modification. For a station
+outside the polar vortex's reach, VPSC and VPSC$\times$EESC will be
+near-zero year-round and will likely not be selected by the AIC stepwise
+procedure -- this is expected, not a bug.
+
+**Data gaps.** Stations with fewer flights per month than Sodankyla's
+4--5 will produce wider confidence intervals. The monthly aggregation
+(`resample("MS").mean()`) handles this correctly either way.
+
+**Multi-station comparison.** To compare several stations, run the
+pipeline once per station with a different `--output-dir` and/or
+`STATION_CODE`, then collect the printed summary tables and/or the
+`trend_dec`/`trend_p025`/`trend_p975` fields returned by `run_pipeline()`
+to plot them together. A dedicated multi-station comparison script is
+not included.
 
 ## Pipeline structure
 

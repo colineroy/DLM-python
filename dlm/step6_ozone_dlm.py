@@ -58,26 +58,43 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "CH4" / "scripts"))
 from tropo_height import get_trop_height  # noqa: E402 (already validated on CH4)
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
-STATION   = "Sodankyla"
+STATION_NAME = "Sodankyla"   # appears in printed banners and figure titles
+STATION_CODE = ""            # short tag prefixed to output filenames, e.g.
+                             # "ki" for Kiruna -> dlm_o3_ki_troposphere.png.
+                             # Left empty for Sodankyla: default filenames
+                             # (dlm_o3_troposphere.png, ...) stay unprefixed.
 LAT, LON  = 67.37, 26.63
 
 HERE      = Path(__file__).parent
 # WOUDC ozonesonde profiles are NOT bundled in this repo (they are not
 # ours to redistribute in bulk) -- point INPUT_DIR at wherever you keep
 # them, either by editing this default or via `--input-dir` on the
-# command line (see _parse_args() / run_pipeline()). The 3 subfolders
-# below must cover the whole Sodankyla archive: 89-94 (NOGDB, 382
-# profiles), 94-24 (1510 profiles), 24-26 (SHARP, 70 profiles).
+# command line (see _parse_args() / run_pipeline()).
 INPUT_DIR = HERE.parent / "input"
 
 
 def _sonde_dirs(input_dir) -> list:
+    """Resolves the folder(s) to scan for WOUDC extCSV profiles.
+
+    Two layouts are supported:
+      - the Sodankyla archive layout, split into three chronological
+        subfolders: <input_dir>/89-94/woudc/ (382 profiles),
+        <input_dir>/94-24/woudc/ (1510 profiles),
+        <input_dir>/24-26/woudc/ (70 profiles) -- used whenever any of
+        these subfolders exists;
+      - a flat layout for any other station: extCSV files directly
+        inside <input_dir>/ -- used otherwise, so a single WOUDC
+        download folder works with no reorganizing needed.
+    """
     input_dir = Path(input_dir)
-    return [
+    sodankyla_layout = [
         input_dir / "89-94" / "woudc",
         input_dir / "94-24" / "woudc",
         input_dir / "24-26" / "woudc",
     ]
+    if any(d.exists() for d in sodankyla_layout):
+        return [d for d in sodankyla_layout if d.exists()]
+    return [input_dir]
 
 
 SONDE_DIRS = _sonde_dirs(INPUT_DIR)
@@ -495,9 +512,16 @@ COLOR_FIT   = "#ff6b6b"
 COLOR_BAND  = "#66bb6a"
 
 
+def _tag() -> str:
+    """Filename prefix derived from STATION_CODE (empty by default, so
+    Sodankyla filenames stay exactly dlm_o3_{layer}.png; setting
+    STATION_CODE = "ki" for Kiruna gives dlm_o3_ki_{layer}.png)."""
+    return f"{STATION_CODE}_" if STATION_CODE else ""
+
+
 def plot_layer_results(res: dict, output_dir: Path = OUTPUT_DIR):
     """
-    2 figures per layer:
+    2 figures per layer (filenames tagged with STATION_CODE if set):
       1. dlm_o3_{layer}.png: observed data (absolute DU units) +
          smoothed DLM fit (level + harmonics).
       2. dlm_o3_{layer}_slope.png: instantaneous slope nu(t) in
@@ -530,13 +554,13 @@ def plot_layer_results(res: dict, output_dir: Path = OUTPUT_DIR):
     ax.plot(dates, y_abs, "o", ms=3, alpha=0.4, color=COLOR_DATA, label="Sondes (monthly)")
     ax.plot(dates, fit_abs, lw=1.8, color=COLOR_FIT, label="DLM (level + season)")
     ax.set_ylabel("O$_3$ (DU)", fontsize=11)
-    ax.set_title(f"Ozone {layer.replace('_',' ')} -- Sodankyla (sondes 1988-2026)",
+    ax.set_title(f"Ozone {layer.replace('_',' ')} -- {STATION_NAME}",
                 fontsize=12, fontweight="bold")
     ax.legend(fontsize=9, framealpha=0.9)
     ax.grid(alpha=0.25)
     ax.xaxis.set_major_locator(mdates.YearLocator(5))
     fig.tight_layout()
-    fig.savefig(output_dir / f"dlm_o3_{layer}.png", dpi=150, bbox_inches="tight")
+    fig.savefig(output_dir / f"dlm_o3_{_tag()}{layer}.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
     # ── Instantaneous slope nu(t) with MCMC band ─────────────────────────
@@ -559,10 +583,10 @@ def plot_layer_results(res: dict, output_dir: Path = OUTPUT_DIR):
     ax.grid(alpha=0.25)
     ax.xaxis.set_major_locator(mdates.YearLocator(5))
     fig.tight_layout()
-    fig.savefig(output_dir / f"dlm_o3_{layer}_slope.png", dpi=150, bbox_inches="tight")
+    fig.savefig(output_dir / f"dlm_o3_{_tag()}{layer}_slope.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
-    print(f"  -> Figures: dlm_o3_{layer}.png, dlm_o3_{layer}_slope.png (in {output_dir}/)")
+    print(f"  -> Figures: dlm_o3_{_tag()}{layer}.png, dlm_o3_{_tag()}{layer}_slope.png (in {output_dir}/)")
 
 
 def plot_layers_comparison(results: dict, output_dir: Path = OUTPUT_DIR):
@@ -597,18 +621,18 @@ def plot_layers_comparison(results: dict, output_dir: Path = OUTPUT_DIR):
     ax.set_yticks(y_pos)
     ax.set_yticklabels(labels, fontsize=11)
     ax.set_xlabel("O$_3$ trend [%/decade]", fontsize=11)
-    ax.set_title("DLM trends by layer -- Ozone Sodankyla (1988-2026)",
+    ax.set_title(f"DLM trends by layer -- Ozone {STATION_NAME}",
                 fontsize=12, fontweight="bold")
     ax.grid(axis="x", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output_dir / "dlm_o3_comparison_layers.png", dpi=150, bbox_inches="tight")
+    fig.savefig(output_dir / f"dlm_o3_{_tag()}comparison_layers.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"  -> Figure: dlm_o3_comparison_layers.png (in {output_dir}/)")
+    print(f"  -> Figure: dlm_o3_{_tag()}comparison_layers.png (in {output_dir}/)")
 
 
 def print_summary(results: dict):
     print("\n" + "="*72)
-    print("  DLM OZONE RESULTS (Laine 2014 + Nilsen 2024) - Sodankyla")
+    print(f"  DLM OZONE RESULTS (Laine 2014 + Nilsen 2024) - {STATION_NAME}")
     print("="*72)
     for layer, res in results.items():
         if layer.endswith("_validation"):
@@ -634,7 +658,7 @@ def run_pipeline(run_validation: bool = True, use_proxies: bool = USE_PROXIES,
     output_dir.mkdir(exist_ok=True, parents=True)
     sonde_dirs = _sonde_dirs(input_dir)
     print("="*60)
-    print(f"  DLM OZONE - {STATION} {LAT}N {LON}E")
+    print(f"  DLM OZONE - {STATION_NAME} {LAT}N {LON}E")
     print(f"  WOUDC sondes 1988-2026 (3 partial layers + total column)")
     print(f"  Proxies: {'yes' if use_proxies else 'no'} | Input: {input_dir} | Output: {output_dir}")
     print("="*60)
