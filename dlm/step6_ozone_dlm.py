@@ -64,6 +64,12 @@ STATION_CODE = ""            # short tag prefixed to output filenames, e.g.
                              # Left empty for Sodankyla: default filenames
                              # (dlm_o3_troposphere.png, ...) stay unprefixed.
 LAT, LON  = 67.37, 26.63
+HEMISPHERE = "N" if LAT >= 0 else "S"   # selects the VPSC column (see _load_vpsc);
+                                        # T_LS/T_MS/tropopause_era5.csv are ERA5
+                                        # extractions AT SODANKYLA'S COORDINATES
+                                        # ONLY and are not valid for other stations
+                                        # regardless of hemisphere -- exclude them
+                                        # via run_pipeline(proxy_candidates=...).
 
 HERE      = Path(__file__).parent
 # WOUDC ozonesonde profiles are NOT bundled in this repo (they are not
@@ -305,12 +311,18 @@ def _load_eesc(monthly_idx):
     return eesc_monthly.reindex(monthly_idx).interpolate(limit=6)
 
 
-def _load_vpsc(monthly_idx):
+def _load_vpsc(monthly_idx, hemisphere: str = HEMISPHERE):
+    """VPSC (volume of polar stratospheric clouds), NAT threshold.
+
+    The source file has both hemispheres (NAT_N, NAT_S) -- hemisphere
+    selects which column to read (default: HEMISPHERE, derived from the
+    station's LAT). Using the wrong hemisphere's column would apply the
+    other pole's polar-vortex seasonal cycle to this station's data."""
     fpath = PROXY_DIR / "vpsc-370-550_1994-2024.txt"
     raw = pd.read_csv(fpath, sep=r"\s+")
     dates = pd.to_datetime(raw[["year", "mon", "day"]]
                            .rename(columns={"mon": "month", "day": "day"}))
-    vpsc_s = pd.Series(raw["NAT_N"].values, index=dates)
+    vpsc_s = pd.Series(raw[f"NAT_{hemisphere}"].values, index=dates)
     vpsc_m = vpsc_s.resample("MS").mean()
     return vpsc_m.reindex(monthly_idx).interpolate(limit=3)
 
@@ -347,7 +359,7 @@ def load_proxies(monthly_idx: pd.DatetimeIndex,
     df["T_MS"] = _load_csv_series("temp_strato_ms.csv", 0, monthly_idx)
 
     eesc = _load_eesc(monthly_idx)
-    vpsc = _load_vpsc(monthly_idx)
+    vpsc = _load_vpsc(monthly_idx, hemisphere=HEMISPHERE)
     df["EESC"] = eesc
     df["VPSC"] = vpsc
     df["VPSC_EESC"] = vpsc * eesc
@@ -437,7 +449,8 @@ def select_proxies(y: pd.Series, proxy_df: pd.DataFrame,
 
 def run_dlm_layer(y_raw: pd.Series, proxy_df: pd.DataFrame | None,
                   layer_name: str, verbose: bool = True,
-                  use_proxies: bool = USE_PROXIES) -> dict:
+                  use_proxies: bool = USE_PROXIES,
+                  proxy_candidates: list = PROXY_CANDIDATES) -> dict:
     print(f"\n{'='*60}")
     print(f"  Layer: {layer_name.upper().replace('_', ' ')} OZONE")
     print(f"{'='*60}")
@@ -452,6 +465,7 @@ def run_dlm_layer(y_raw: pd.Series, proxy_df: pd.DataFrame | None,
         proxy_aligned = proxy_df.reindex(y_idx)
         print(f"  [1] AIC proxy selection (threshold={AIC_THRESHOLD})...")
         selected = select_proxies(pd.Series(y_norm, index=y_idx), proxy_aligned,
+                                  candidates=proxy_candidates,
                                   threshold=AIC_THRESHOLD)
         if selected:
             exog = proxy_aligned[selected].values
@@ -653,7 +667,8 @@ def print_summary(results: dict):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_pipeline(run_validation: bool = True, use_proxies: bool = USE_PROXIES,
-                 output_dir: Path = OUTPUT_DIR, input_dir: Path = INPUT_DIR):
+                 output_dir: Path = OUTPUT_DIR, input_dir: Path = INPUT_DIR,
+                 proxy_candidates: list = PROXY_CANDIDATES):
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
     sonde_dirs = _sonde_dirs(input_dir)
@@ -674,7 +689,8 @@ def run_pipeline(run_validation: bool = True, use_proxies: bool = USE_PROXIES,
     for layer in list(LAYERS) + ["total"]:
         y_raw = monthly_sonde[f"O3_{layer}"].dropna()
 
-        res = run_dlm_layer(y_raw, proxy_df, layer, use_proxies=use_proxies)
+        res = run_dlm_layer(y_raw, proxy_df, layer, use_proxies=use_proxies,
+                            proxy_candidates=proxy_candidates)
         results[layer] = res
         plot_layer_results(res, output_dir=output_dir)
 
